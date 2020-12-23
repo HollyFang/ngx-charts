@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { trimLabel } from '../trim-label.helper';
 import { reduceTicks } from './ticks.helper';
+import { roundedRect } from '../../common/shape.helper';
 
 @Component({
   selector: 'g[ngx-charts-x-axis-ticks]',
@@ -30,6 +31,11 @@ import { reduceTicks } from './ticks.helper';
       </svg:g>
     </svg:g>
 
+    <svg:path
+      *ngIf="activeTime"
+      [attr.d]="activeTimePath"
+      [attr.transform]="gridLineTransform()"
+    />
     <svg:g *ngFor="let tick of ticks" [attr.transform]="tickTransform(tick)">
       <svg:g *ngIf="showGridLines" [attr.transform]="gridLineTransform()">
         <svg:line class="gridline-path gridline-path-vertical" [attr.y1]="-gridLineHeight" y2="0" />
@@ -50,6 +56,7 @@ export class XAxisTicksComponent implements OnChanges, AfterViewInit {
   @Input() showGridLines = false;
   @Input() gridLineHeight;
   @Input() width;
+  @Input() activeTime;
   @Input() rotateTicks: boolean = true;
 
   @Output() dimensionsChanged = new EventEmitter();
@@ -67,6 +74,7 @@ export class XAxisTicksComponent implements OnChanges, AfterViewInit {
   ticks: any;
   tickFormat: (o: any) => any;
   height: number = 0;
+  activeTimePath:string;
 
   @ViewChild('ticksel') ticksElement: ElementRef;
 
@@ -121,9 +129,22 @@ export class XAxisTicksComponent implements OnChanges, AfterViewInit {
       this.textAnchor = 'middle';
     }
 
+    if(this.activeTime){
+      this.setActiveTime();
+    }
     setTimeout(() => this.updateDims());
   }
 
+  setActiveTime(): void {
+    let activeVal = this.adjustedScale(this.activeTime);
+console.log('setReferencelines');
+    this.activeTimePath = roundedRect(activeVal, this.height, 1, this.height, 0, [
+      false,
+      false,
+      false,
+      false
+    ]);
+  }
   getRotationAngle(ticks): number {
     let angle = 0;
     this.maxTicksLength = 0;
